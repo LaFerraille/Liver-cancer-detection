@@ -50,8 +50,13 @@ def clean_df(desc, global_radio, multislice):
     global_radio = global_radio.loc[:, ~global_radio.columns.str.startswith('diagnostics_')]
     multislice = multislice.loc[:, ~multislice.columns.str.startswith('diagnostics_')]
 
+    # Drop "Column1" column from global_radio and multislice
+    global_radio.drop(columns=['Column1'], inplace=True)
+    multislice.drop(columns=['Column1'], inplace=True)
+
     return desc, global_radio, multislice
 
+# Pas nécessaire avec PARAFAC
 def complete_df(global_radio, multislice):
 
     global_radio_complete = global_radio[global_radio.groupby('ID')['temps_inj'].transform('nunique') == 4]
@@ -59,7 +64,7 @@ def complete_df(global_radio, multislice):
 
     return global_radio_complete, multislice_complete
 
-def prepare_feature_target_matrices(df, target_col_prefix='classe_name'):
+def prepare_feature_target_matrices(df):
 
     df.set_index(['ID', 'temps_inj'], inplace=True)
 
