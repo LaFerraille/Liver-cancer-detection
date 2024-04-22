@@ -1,0 +1,131 @@
+```{r}
+#install.packages('RGCCA')
+# Chargement des packages
+library(RGCCA)
+```
+
+```{r}
+# Set the repo to the current directory
+setwd("/Users/raphaelromandferroni/Desktop/AMDA/Liver-cancer-detection")
+```
+
+```{r}
+# Chargement de data/processed/global_radio_rgcca.csv
+data <- read.csv("data/processed/multislice_rgcca.csv", header = TRUE, sep = ",")
+```
+
+We define the 7 blocks
+```{r}
+X1 = data[,1:720] # First Order Features
+X2 = data[,721:3720] # Texture
+X3 = data[,3721:3722] # Labeling
+
+# X1 = data[,1:720] # First Order Features
+# X2 = data[,721:1680] #GLCM 
+# X3 = data[,1681:2240] #GLDM 
+# X4 = data[,2241:2880] #GLRLM 
+# X5 = data[,2881:3520] #GLSZM
+# X6 = data[,3521:3720] #NGTDM
+# X7 = data[,3721:3722] # Labeling
+```
+
+We apply RGCCA to the 7 blocks
+```{r}
+# L = list(firstorder = X1, GLCM = X2, GLDM = X3, GLRLM = X4, GLSZM = X5, NGTDM = X6, Labels = X7)
+# C <- matrix(
+#   c(0, 0, 0, 0 ,0, 0, 1,
+#     0, 0, 0, 0 ,0, 0, 1,
+#     0, 0, 0, 0 ,0, 0, 1,
+#     0, 0, 0, 0 ,0, 0, 1,
+#     0, 0, 0, 0 ,0, 0, 1,
+#     0, 0, 0, 0 ,0, 0, 1,
+#     1, 1, 1, 1 ,1, 1, 0),
+#   nrow = 7,
+#   ncol = 7,
+# )
+L = list(firstorder = X1, texture = X2, labels = X3)
+C <- matrix(
+  c(0, 0, 1,
+    0, 0, 1,
+    1, 1, 0),
+  nrow = 3,
+  ncol = 3,
+)
+```
+
+
+```{r}
+# tau = c(1, 1, 1, 1, 1, 1, 0)
+tau = c(1, 1, 0)
+```
+
+```{r}
+fit.rgcca = rgcca(L, connection = C, tau = tau, 
+                  scheme = function(x) abs(x), ncomp = c(2,2,1),
+                  init = "random", verbose = TRUE)
+```
+
+
+```{r}
+plot(fit.rgcca, display_order = FALSE, comp = 2)
+```
+
+```{r}
+boot_out = rgcca_bootstrap(fit.rgcca, 500)
+print(boot_out)
+```
+
+```{r}
+plot(boot_out, display_order = FALSE)
+```
+
+```{r, fig.cap = 'Factor plot - y1 vs y2'}
+
+lab = factor(apply(data[, 3721:3723], 1, which.max),
+labels = c("CCK", "CHC", "Mixtes"))
+plot(fit.rgcca, type = "sample", resp = lab)
+
+# Save this plot
+# png("/Users/raphaelromandferroni/Desktop/AMDA/Liver-cancer-detection/factor_plot_y1_vs_y2.png")
+# plot(fit.rgcca, type = "sample", resp = lab)
+# dev.off()
+
+```
+
+```{r}
+plot(fit.rgcca, type = "cor_circle", comp = 1:2)
+```
+
+
+### Let's fit with SGCCA
+
+```{r}
+fit.sgcca = rgcca(L, connection = C, method = "sgcca", sparsity = c(0.8,0.1, 1), ncomp = c(2,2,1),
+                  scheme = function(x) x^2, verbose = TRUE)
+```
+
+```{r}
+print(fit.sgcca)
+```
+
+```{r}
+colnames(L[[1]])[which(fit.sgcca$a[[1]][, 1]!=0)]
+```
+
+```{r}
+colnames(A[[2]])[which(fit.sgcca$a[[2]][, 1]!=0)]
+```
+
+```{r}
+plot(fit.sgcca, type = "sample", resp = lab, title = "Factorial plan of SGCCA")
+
+#Save this plot
+png("/Users/raphaelromandferroni/Desktop/AMDA/Liver-cancer-detection/sgcca.png")
+plot(fit.sgcca, type = "sample", resp = lab, title = "Factorial plan of SGCCA")
+dev.off()
+```
+
+```{r, fig.cap = 'Factorial plan of RGCCA, Y1 (GE) vs Y2 (GE)'}
+plot(fit.sgcca, type = "sample", block = 1, comp = 1:2,
+     resp = lab, title = "Factorial plan of SGCCA")
+```
