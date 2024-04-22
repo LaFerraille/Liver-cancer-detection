@@ -70,12 +70,6 @@ def plot_feature_importances(X, y, k=10):
     plt.xlim([-1, k])
     plt.show()
 
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.decomposition import PCA
-from sklearn.metrics import accuracy_score
-
-# Define your model training and prediction function here
 def train_model(model, X_train, y_train, X_test):
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)

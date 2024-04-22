@@ -94,7 +94,6 @@ def multislice_consistent(multislice_complete, min_range=10):
     # Dictionary to store the range of each ID
     id_ranges = {}
 
-    # Calculate the range for each patient ID
     for id in unique_ids:
         patient_data = multislice_complete[multislice_complete['ID'] == id]
         min_slice = patient_data['slice_num'].min()
@@ -150,7 +149,6 @@ def X_y_multislice(df):
     current_temps_inj = None
     slice_counter = 1
 
-    # Iterate over the DataFrame rows
     for index, row in df.iterrows():
         # Check if we are still on the same ID and temps_inj
         if (row['ID'], row['temps_inj']) == (current_id, current_temps_inj):
